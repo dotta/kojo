@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: javazoom.jl
+OpenIDE-Module-Localizing-Bundle: javazoom/jl/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

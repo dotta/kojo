@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: geogebra
+OpenIDE-Module-Localizing-Bundle: geogebra/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

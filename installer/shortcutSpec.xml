@@ -1,0 +1,31 @@
+<shortcuts>
+    <skipIfNotSupported/>
+    <programGroup defaultName="Kojo" 
+	    location="startMenu"/>
+      <shortcut
+         name="The Kojo Learning Environment"
+         target="$INSTALL_PATH\bin\kojo.exe"
+         iconFile="$INSTALL_PATH\icons\kojo48.ico"
+         programGroup="yes"
+         desktop="yes"
+         applications="no"
+         startMenu="no"
+         startup="no"
+         commandLine=""
+         description="The Kojo Learning Environment"
+         initialState="normal">
+      </shortcut>
+      <shortcut
+         name="Uninstall Kojo"
+         target="javaw"
+         programGroup="yes"
+         desktop="no"
+         applications="no"
+         startMenu="no"
+         startup="no"
+         commandLine="-jar &quot;$INSTALL_PATH\Uninstaller\uninstaller.jar&quot;"
+         description="Uninstall The Kojo Learning Environment"
+         initialState="normal">
+      </shortcut>
+</shortcuts>
+

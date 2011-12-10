@@ -1,0 +1,7 @@
+The source code for geogebra is available at the following locations:
+
+- Original GeoGebra source:
+http://www.geogebra.org/source/program/
+
+- Slightly modified GeoGebra source embedded inside Kojo:
+http://code.google.com/p/kojo/source/checkout?repo=geogebra

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="scala-module" default="netbeans" basedir=".">
+    <property name="harness.dir" value="nbplatform.${nbplatform.active}.harness.dir"/>
+    <import file="${harness.dir}/build.xml"/>
+
+    <property environment="env"/>
+    <condition property="scala.home" value="${env.SCALA_HOME}">
+        <isset property="env.SCALA_HOME"/>
+    </condition>
+    <fail unless="scala.home">
+You must set SCALA_HOME or environment property and append "-J-Dscala.home=scalahomepath"
+property to the end of "netbeans_default_options" in NetBeansInstallationPath/etc/netbeans.conf to point to
+Scala installation directory.
+    </fail>
+    <property name="scala.compiler" value="${scala.home}/lib/scala-compiler.jar"/>
+    <property name="scala.library" value="${scala.home}/lib/scala-library.jar"/>
+    <property name="scala.lib" value="${scala.home}/lib"/>
+
+    <path id="scala.libs">
+        <pathelement location="${scala.library}"/>
+        <pathelement location="${scala.compiler}"/>
+    </path>
+
+    <!-- scalac will check class dependencies deeply, so we can not rely on public package only which is refed by ${module.classpath} -->
+    <path id="scalac.cp">
+        <path refid="scala.libs"/>
+        <pathelement path="${module.run.classpath}"/>
+        <pathelement path="${cp.extra}"/>
+    </path>
+
+    <target name="scala-taskdef" depends="init">
+        <echo message="Compiling scala sources via ${scala.library}, ${scala.compiler}"/>
+        <path id="scala.libs">
+            <pathelement location="${scala.library}"/>
+            <pathelement location="${scala.compiler}"/>
+        </path>
+        <taskdef resource="scala/tools/ant/antlib.xml">
+            <classpath>
+                <path refid="scala.libs"/>
+            </classpath>
+        </taskdef>
+    </target>
+
+    <property name="jar-excludes" value="**/*.java,**/*.form,**/package.html,**/doc-files/,**/*.scala"/>
+
+    <target name="-do-scalac" depends="init,up-to-date,scala-taskdef">
+        <condition property="condition-scala-fsc">
+            <isset property="scala.fsc"/>
+        </condition>
+        <antcall target="-do-fast-scalac"/>  <!--then-->
+        <antcall target="-do-norm-scalac"/>  <!--else-->
+    </target>
+
+    <target name="-do-fast-scalac" depends="init,up-to-date,scala-taskdef" if="condition-scala-fsc">
+        <echo message="*************************************Doing fast scalac"/>
+        <fsc classpathref="scalac.cp" srcdir="${src.dir}" destdir="${build.classes.dir}"
+            encoding="UTF-8" target="jvm-${javac.target}" >
+        </fsc>
+    </target>
+
+    <target name="-do-norm-scalac" unless="condition-scala-fsc">
+        <echo message="*************************************Doing normal scalac"/>
+        <scalac classpathref="scalac.cp" srcdir="${src.dir}" destdir="${build.classes.dir}"
+                encoding="UTF-8" target="jvm-${javac.target}" 
+                addparams="-dependencyfile ${build.classes.dir}/.scala_dependencies"
+                force="false" fork="true" scalacdebugging="false" />
+    </target>
+
+    <target name="scala-compile" depends="scala-taskdef" unless="is.jar.uptodate">
+
+        <!-- javac's classpath should include scala.library and all these paths of "cp" -->
+        <!-- if I try to put this at the top level, javac fails with missing classes/packages -->
+        <path id="javac.cp">
+            <path refid="scala.libs"/>
+            <pathelement path="${module.classpath}"/>
+            <pathelement path="${cp.extra}"/>
+        </path>
+
+        <mkdir dir="${build.classes.dir}"/>
+        <depend srcdir="${src.dir}" destdir="${build.classes.dir}" cache="build/depcache">
+            <classpath refid="scalac.cp"/>
+        </depend>
+
+        <!-- scalac -->
+        <antcall target="-do-scalac"/>
+
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${src.dir}" excludes="${jar-excludes}"/>
+        </copy>
+    </target>
+
+
+    <target name="test-up-to-date">
+        <!-- This does not work because the netbeans test build seems to zap the test classes, and then no tests get run
+        <uptodate targetfile="${test.unit.out.folder}/tests.jar" property="is.test.jar.uptodate">
+            <srcfiles dir="${test.unit.src.dir}"/>
+        </uptodate>
+        -->
+    </target>
+
+    <property name="test.unit.run.cp.extra" value="C:/Users/lalit/work/main-golden/nbbuild/build/testdist/unit/ide12/org-netbeans-modules-csl-api/tests.jar;C:/Users/lalit/work/main-golden/nbbuild/build/testdist/unit/platform11/org-netbeans-modules-editor-mimelookup/tests.jar" />
+
+    <target name="do-test-build" depends="init, test-init, test-up-to-date,projectized-common.do-test-build" unless="is.test.jar.uptodate">
+    </target>
+
+</project>

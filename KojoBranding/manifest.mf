@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+OpenIDE-Module: net.kogics.kojo.branding
+OpenIDE-Module-Layer: net/kogics/kojo/branding/layer.xml
+OpenIDE-Module-Localizing-Bundle: net/kogics/kojo/branding/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

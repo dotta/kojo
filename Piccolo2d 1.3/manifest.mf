@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: edu.umd.cs.piccolo
+OpenIDE-Module-Localizing-Bundle: edu/umd/cs/piccolo/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

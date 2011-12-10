@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.apisupport.project</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
+            <code-name-base>javazoom.jl</code-name-base>
+            <suite-component/>
+            <module-dependencies/>
+            <public-packages>
+                <package>javazoom.jl.converter</package>
+                <package>javazoom.jl.decoder</package>
+                <package>javazoom.jl.player</package>
+                <package>javazoom.jl.player.advanced</package>
+            </public-packages>
+            <class-path-extension>
+                <runtime-relative-path>ext/jl1.0.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jl1.0.1.jar</binary-origin>
+            </class-path-extension>
+        </data>
+    </configuration>
+</project>

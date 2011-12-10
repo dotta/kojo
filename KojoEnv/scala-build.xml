@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="scala-module" default="netbeans" basedir=".">
+    <property name="harness.dir" value="nbplatform.${nbplatform.active}.harness.dir"/>
+    <import file="${harness.dir}/build.xml"/>
+
+    <property environment="env"/>
+    <condition property="scala.home" value="${env.SCALA_HOME}">
+        <isset property="env.SCALA_HOME"/>
+    </condition>
+    <fail unless="scala.home">
+        You must set SCALA_HOME or environment property and append "-J-Dscala.home=scalahomepath"
+        property to the end of "netbeans_default_options" in NetBeansInstallationPath/etc/netbeans.conf to point to
+        Scala installation directory.
+    </fail>
+    <property name="scala.compiler" value="${scala.home}/lib/scala-compiler.jar"/>
+    <property name="scala.library" value="${scala.home}/lib/scala-library.jar"/>
+    <property name="scala.lib" value="${scala.home}/lib"/>
+    <property name="build.scala.classes.dir" value="${basedir}/build/scalaclasses"/>
+
+    <path id="scala.libs">
+        <pathelement location="${scala.library}"/>
+        <pathelement location="${scala.compiler}"/>
+    </path>
+
+    <!-- scalac will check class dependencies deeply, so we can not rely on public package only which is refed by ${module.classpath} -->
+    <path id="scalac.cp">
+        <path refid="scala.libs"/>
+        <pathelement path="${module.run.classpath}"/>
+        <pathelement path="${cp.extra}"/>
+        <pathelement path="${build.classes.dir}"/>
+    </path>
+
+    <target name="scala-taskdef" depends="init">
+        <echo message="Compiling scala sources via ${scala.library}, ${scala.compiler}"/>
+        <path id="scala.libs">
+            <pathelement location="${scala.library}"/>
+            <pathelement location="${scala.compiler}"/>
+        </path>
+        <taskdef resource="scala/tools/ant/antlib.xml">
+            <classpath>
+                <path refid="scala.libs"/>
+            </classpath>
+        </taskdef>
+    </target>
+
+    <property name="jar-excludes" value="**/*.java,**/*.form,**/package.html,**/doc-files/,**/*.scala"/>
+
+    <target name="-do-scalac">
+        <condition property="condition-scala-fsc">
+            <isset property="scala.fsc"/>
+        </condition>
+        <antcall target="-do-fast-scalac"/>  <!--then-->
+        <antcall target="-do-norm-scalac"/>  <!--else-->
+    </target>
+
+    <target name="-do-fast-scalac" if="condition-scala-fsc">
+        <echo message="*************************************Doing fast scalac"/>
+        <!-- we set force=true to recompile eveything, because of the nb-javac issue (see below) -->
+        <fsc classpathref="scalac.cp" srcdir="${src.dir}" destdir="${build.classes.dir}"
+             encoding="UTF-8" target="jvm-${javac.target}" unchecked="${scalac.unchecked}"
+             deprecation="${scalac.deprecation}" force="true" />
+    </target>
+
+    <target name="-do-norm-scalac" unless="condition-scala-fsc">
+        <echo message="*************************************Doing normal scalac"/>
+        <scalac classpathref="scalac.cp" srcdir="${src.dir}" destdir="${build.scala.classes.dir}"
+                encoding="UTF-8" target="jvm-${javac.target}" unchecked="${scalac.unchecked}"
+                addparams="-dependencyfile ${build.scala.classes.dir}/.scala_dependencies"
+                deprecation="${scalac.deprecation}" force="false" fork="true" scalacdebugging="false" />
+    </target>
+
+    <target name="scala-compile" depends="scala-taskdef" unless="is.jar.uptodate">
+
+        <!-- javac's classpath should include scala.library and all these paths of "cp" -->
+        <path id="javac.cp">
+            <path refid="scala.libs"/>
+            <pathelement path="${module.classpath}"/>
+            <pathelement path="${cp.extra}"/>
+            <pathelement path="${build.scala.classes.dir}"/>
+        </path>
+
+        <mkdir dir="${build.classes.dir}"/>
+        <mkdir dir="${build.scala.classes.dir}"/>
+
+        <depend srcdir="${src.dir}" destdir="${build.classes.dir}" cache="${build.dir}/depcache">
+            <classpath refid="javac.cp"/>
+        </depend>
+
+        <!-- scalac -->
+        <!-- Compile scala sources - to ${build.scala.classes.dir} - so nbjavac below can't zap them -->
+        <antcall target="-do-scalac"/>
+
+        <!-- nb-javac clobbers the scala classes (if they're in its output dir) because it thinks one of the 
+        classes is stale -->
+        <nb-javac srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${build.compiler.debug}" debuglevel="${build.compiler.debuglevel}" encoding="UTF-8"
+                deprecation="${build.compiler.deprecation}" optimize="${build.compiler.optimize}" source="${javac.source}" target="${javac.target}" includeantruntime="false">
+            <classpath refid="javac.cp"/>
+            <compilerarg line="${javac.compilerargs}"/>
+            <processorpath refid="processor.cp"/>
+        </nb-javac>
+
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${src.dir}" excludes="${jar-excludes}"/>
+        </copy>
+        <!-- Now copy scala classes to compilation output dir -->
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${build.scala.classes.dir}"/>
+        </copy>
+    </target>
+
+
+    <target name="kojo-test-init" depends="test-init, scala-taskdef">
+    <!-- A hack to get tests to compile, without making the KojoEnv module dependent on the
+                 test modules (which makes the test jars get bundled in the distribution).
+    -->
+        <path id="kojo.test.jars">
+            <fileset dir="../JMock 2.5.1/release/modules/ext">
+                <include name="**/*.jar"/>
+            </fileset>
+            <fileset dir="../ScalaCheck/release/modules/ext">
+                <include name="**/*.jar"/>
+            </fileset>
+            <pathelement location="../JUnit4/junit-4.8.2.jar"/>
+            <pathelement location="../ScalaTest/scalatest-1.6.1.jar"/>
+        </path>
+
+        <path id="test.unit.build.cp">
+            <path refid="test.unit.cp"/> <!-- includes test.unit.compile.cp and test.unit.lib.cp props, that show up as missing in the compile output -->
+            <path refid="kojo.test.jars"/>
+        </path>
+        <path id="test.unit.run.cp">
+            <path refid="test.unit.build.cp"/>
+            <pathelement path="${build.test.unit.classes.dir}"/>
+        </path>
+
+        <path id="test.qa-functional.build.cp">
+            <path refid="test.qa-functional.cp"/>
+            <path refid="kojo.test.jars"/>
+            <pathelement path="${build.test.unit.classes.dir}"/>
+        </path>
+        <path id="test.qa-functional.run.cp">
+            <path refid="test.qa-functional.build.cp"/>
+            <pathelement path="${build.test.qa-functional.classes.dir}"/>
+        </path>
+    </target>
+
+<!-- 
+    The do-light-test-build does not compile the Kojo sources - to save some time while testing 
+    (scala-compile always seems to compile some (Kojo source) files, even if nothing has changed).
+    To force recompilation of changed Kojo sources, make the do-light-test-build target depend
+    on scala-compile instead of scala-taskdef
+-->
+    <target name="do-light-test-build" depends="kojo-test-init">
+        
+        <mkdir dir="${build.test.unit.classes.dir}"/>
+        
+        <scalac srcdir="${test.unit.src.dir}" destdir="${build.test.unit.classes.dir}" excludes="${test.excludes}"
+                encoding="UTF-8" fork="true">
+            <classpath refid="test.unit.build.cp"/>
+        </scalac>
+    </target>
+
+    <target name="run-tests-helper" depends="do-light-test-build">
+        <echo message="*************************************Doing custom test run"/>
+        <mkdir dir="${build.test.unit.results.dir}"/>
+        <junit showoutput="true" fork="true" failureproperty="tests.failed" errorproperty="tests.failed" filtertrace="${test.filter.trace}" tempdir="${build.test.unit.results.dir}" timeout="${test.timeout}">
+            <batchtest todir="${build.test.unit.results.dir}">
+                <fileset dir="${build.test.unit.classes.dir}" includes="${test.includes}" excludes="${test.excludes}"/>
+            </batchtest>
+            <classpath refid="test.unit.run.cp"/>
+            <syspropertyset refid="test.unit.properties"/>
+            <jvmarg line="${test.bootclasspath.prepend.args}"/>
+            <jvmarg line="${test.run.args}"/>
+                <!--needed to have tests NOT to steal focus when running, works in latest apple jdk update only.-->
+            <sysproperty key="apple.awt.UIElement" value="@{disable.apple.ui}"/>
+            <formatter type="brief" usefile="false"/>
+            <formatter type="xml"/>
+        </junit>
+        <fail message="Some tests failed; see details above.">
+            <condition>
+                <and>
+                    <isset property="tests.failed"/>
+                    <isfalse value="${continue.after.failing.tests}"/>
+                </and>
+            </condition>
+        </fail>
+        
+    </target>
+    
+    <target name="run-tests-custom">
+        <property name="test.includes" value="**/*Test.class"/>
+        <antcall target="run-tests-helper"/>
+    </target>
+
+    <target name="run-test-single" depends="jar"> <!-- depends="jar" -->
+        <property name="test.includes" value="**/story/Li*Test.class"/>
+        <antcall target="run-tests-helper"/>
+    </target>
+
+    <target name="do-light-ftest-build" depends="do-light-test-build">
+        <mkdir dir="${build.test.qa-functional.classes.dir}"/>
+        
+        <scalac srcdir="${test.qa-functional.src.dir}" destdir="${build.test.qa-functional.classes.dir}" excludes="${test.excludes}"
+                encoding="UTF-8" fork="true">
+            <classpath refid="test.qa-functional.build.cp"/>
+        </scalac>
+    </target>
+
+    <target name="run-ftests-custom" depends="do-light-ftest-build">
+        <echo message="*************************************Doing custom functional test run"/>
+        <property name="test.includes" value="**/*Test.class"/>
+        <mkdir dir="${build.test.qa-functional.results.dir}"/>
+        <junit showoutput="true" fork="true" failureproperty="tests.failed" errorproperty="tests.failed" filtertrace="${test.filter.trace}" tempdir="${build.test.qa-functional.results.dir}" timeout="${test.timeout}">
+            <batchtest todir="${build.test.qa-functional.results.dir}">
+                <fileset dir="${build.test.qa-functional.classes.dir}" includes="${test.includes}" excludes="${test.excludes}"/>
+            </batchtest>
+            <classpath refid="test.qa-functional.run.cp"/>
+            <syspropertyset refid="test.qa-functional.properties"/>
+            <jvmarg line="${test.bootclasspath.prepend.args}"/>
+            <jvmarg line="${test.run.args}"/>
+                <!--needed to have tests NOT to steal focus when running, works in latest apple jdk update only.-->
+            <sysproperty key="apple.awt.UIElement" value="@{disable.apple.ui}"/>
+            <formatter type="brief" usefile="false"/>
+            <formatter type="xml"/>
+        </junit>
+        <fail message="Some tests failed; see details above.">
+            <condition>
+                <and>
+                    <isset property="tests.failed"/>
+                    <isfalse value="${continue.after.failing.tests}"/>
+                </and>
+            </condition>
+        </fail>
+    </target>
+    <target name="test-clean" depends="kojo-test-init">
+        <delete dir="${build.test.unit.classes.dir}"/>
+        <delete dir="${build.test.qa-functional.classes.dir}"/>
+    </target>
+</project>

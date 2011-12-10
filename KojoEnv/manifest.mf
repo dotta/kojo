@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+OpenIDE-Module: net.kogics.kojo
+OpenIDE-Module-Install: net/kogics/kojo/Installer.class
+OpenIDE-Module-Layer: net/kogics/kojo/layer.xml
+OpenIDE-Module-Localizing-Bundle: net/kogics/kojo/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

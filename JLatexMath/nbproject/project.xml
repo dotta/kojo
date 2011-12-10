@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.apisupport.project</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
+            <code-name-base>org.scilab.forge.jlatexmath</code-name-base>
+            <suite-component/>
+            <module-dependencies/>
+            <public-packages>
+                <package>org.scilab.forge.jlatexmath</package>
+                <package>org.scilab.forge.jlatexmath.cyrillic</package>
+                <package>org.scilab.forge.jlatexmath.dynamic</package>
+                <package>org.scilab.forge.jlatexmath.greek</package>
+            </public-packages>
+            <class-path-extension>
+                <runtime-relative-path>ext/jlatexmath-0.9.3.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jlatexmath-0.9.3.jar</binary-origin>
+            </class-path-extension>
+        </data>
+    </configuration>
+</project>

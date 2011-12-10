@@ -1,0 +1,45 @@
+To build Kojo from source, you need to do the following:
+
+- Clone the Kojo Mercurial repo. This will give you a local Kojo source tree.
+  Let's call the location of this tree $kojo 
+  Note - the root of your source tree should be called kojo or Kojo. If it
+  isn't, you will get a runtime exception when you build and then run Kojo.
+  You will likely be bitten by this if you create a server-side clone of the
+  Kojo repo on google-code, and then get a local copy of the clone.
+  The default command suggested by google-code for getting a local copy gives
+  your source root the same name as your server-side clone.
+
+- Download and install Scala. This involves having scala on your path, and having
+  SCALA_HOME pointing to your Scala install dir.
+  The currently supported version of Scala is: Scala version 2.9.1
+
+- Download and install Ant 1.7.1 or later.
+
+- Download and install Netbeans 7.0. This step is required because Kojo is
+  a Netbeans Platform application, and depends on Netbeans Platforms jars for
+  things like Window-System and Code-Editor functionality.
+
+- Install the Netbeans Scala Plugin:
+    https://github.com/dcaoyuan/nbscala
+    http://sourceforge.net/projects/erlybird/files/nb-scala/
+
+  Note: if you're interested in doing any development on Kojo, Netbeans
+  (with the Scala Plugin installed) is the only supported IDE at this time.
+ 
+- Fire up Netbeans and open the Kojo project located at $kojo. This will update 
+  the Kojo build scripts to point to your Netbeans location.
+  
+- Now you can build and run Kojo from within Netbeans, or you can go into $kojo
+  and run 'ant build' to build Kojo, and then 'ant run' to run it.
+
+
+Jars in the Repo!
+-----------------
+The Kojo Mercurial Repo includes all the jars needed to build/run Kojo (other than the
+Netbeans Platform jars). The Kojo build process makes no attempt to intelligently
+manage jars using something like Ivy. This is because development on Kojo started
+with nightly builds of many of the core jar dependencies, and this would have been
+a nightmare to manage with centralized jar repositories.
+Given that development work on Kojo involves the downloading of a gazillion other
+things anyway (because of the dependence on the Netbeans Platform), 'jars in the repo'
+is probably not a big deal for the short to medium term.
